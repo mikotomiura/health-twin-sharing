@@ -1,0 +1,21 @@
+# The PJ is shared between a Mac and a Windows PC through Google Drive (decision 2026-11-12).
+# Default: byte-exact, never converted. Recorded inputs and results (json / jsonl / csv / log / SEED ...) keep the bytes
+# whose sha256 are written in data.md / env.md / notes; some outputs made on Windows on 2026-11-11 are CRLF on purpose
+# (dry-run decisions 判断 9). This also stops Windows' core.autocrlf=true from rewriting any file on checkout.
+*           -text
+*.parquet   binary
+
+# Sources: always LF in the repo and in the working tree, so the Mac and Colab never get CRLF shell / Python files.
+*.sh        text eol=lf
+*.py        text eol=lf
+*.md        text eol=lf
+*.toml      text eol=lf
+*.lock      text eol=lf
+*.ipynb     text eol=lf
+*.txt       text eol=lf
+.gitignore  text eol=lf
+.gitattributes text eol=lf
+
+# Exception: an experiment record committed as CRLF (part of the 2026-11-11 llm-dry-run record). Keep its bytes; do
+# not renormalize.
+experiments/20261111-llm-dry-run/run_colab.ipynb -text

@@ -1,0 +1,65 @@
+{
+ "_note": "copy of ../20261111-dry-run-attacker/config.json; changed: source (new A type, 16 persons), arms = stats_think only, think num_predict 2048 -> 4096 (decision 8, .steering/20261112-pilot-new-type/design.md). Dry-run preview only.",
+ "source_experiment": "experiments/20261112-pilot-new-type",
+ "prev_experiment": "experiments/20261111-dry-run-attacker",
+ "knowledge": {
+  "correlates": {
+   "chronic pain": "^Chronic (pain|low back pain|neck pain)",
+   "migraine": "migraine",
+   "an impacted tooth": "^Impacted"
+  }
+ },
+ "arms": [
+  {
+   "id": "stats_think",
+   "knowledge": true,
+   "think": true,
+   "templates": [
+    0
+   ],
+   "aseeds": [
+    0
+   ]
+  }
+ ],
+ "attacker_options": {
+  "temperature": 0.2,
+  "top_p": 0.95,
+  "num_predict": 300,
+  "think": false
+ },
+ "attacker_options_think": {
+  "temperature": 0.6,
+  "top_p": 0.95,
+  "num_predict": 4096,
+  "think": true
+ },
+ "taus": [
+  0.5,
+  0.9
+ ],
+ "judge_model": "qwen3:14b",
+ "judge_options": {
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "num_predict": 400,
+  "think": false
+ },
+ "n_attacker_seeds": 2,
+ "paraphrase_model": "gemma3:12b",
+ "paraphrase_options": {},
+ "paraphrase_twin_seeds": [
+  0
+ ],
+ "tau_main": 0.5,
+ "full": {
+  "min_feature_count": 3,
+  "n_features": 40,
+  "think": true,
+  "extract_seeds": [
+   0,
+   1
+  ],
+  "bar_act_A_tau05": 0.32
+ }
+}

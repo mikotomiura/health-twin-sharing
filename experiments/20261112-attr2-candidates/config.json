@@ -1,0 +1,23 @@
+{
+  "_note": "Second attribute (E2 only, positioning §5 exploratory). Development cohort only (10k seed 42; .steering/20261112-cpu-prep/decisions.md 判断 1). Population and A/non-A definition match the main attribute (build_records.py): alive, age 25-70 in first_year, A = onset before first_year, non-A = never.",
+  "first_year": 2023,
+  "age_range_at_first_year": [25, 70],
+  "main_attribute": "drug abuse|opioid|overdose|misuses drugs",
+  "candidates": {
+    "intimate_partner_abuse": "intimate partner abuse",
+    "criminal_record": "criminal record",
+    "pregnancy": "pregnan",
+    "anxiety": "anxiety",
+    "alcohol": "alcohol",
+    "diabetes_t2": "diabetes mellitus type 2",
+    "prediabetes": "prediabetes",
+    "ckd": "chronic kidney disease",
+    "infertility_or_miscarriage": "miscarriage|infertil",
+    "hypertension": "^essential hypertension",
+    "obesity": "body mass index 30\\+|obesity",
+    "copd_asthma": "asthma|chronic obstructive"
+  },
+  "min_n_correlate": 30,
+  "min_n_joint": 10,
+  "top_correlates": 8
+}

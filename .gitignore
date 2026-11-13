@@ -1,0 +1,13 @@
+.steering/
+.worktrees/
+__pycache__/
+.DS_Store
+.venv/
+*.egg-info/
+
+# 大きい実行ログ（中身は notes に要約）
+experiments/*/results/ollama.log
+
+# fake-backend outputs of the E1 dev dry run (random values, 8 MB; regenerate with run.sh)
+experiments/20261112-e1-dev-dryrun/results/
+experiments/20261112-e1-dev-dryrun/metrics.json

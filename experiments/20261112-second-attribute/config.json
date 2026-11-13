@@ -1,0 +1,19 @@
+{
+ "_note": "Screening of second-attribute candidates on the development split only (cpu-prep 2). Rough: A = any matching condition with onset before first_year (ever, not the active-at-year rule), features = conditions with onset before first_year minus the A pattern, support >= min_support. Alive, age range at first_year. Logistic regression, 5-fold out-of-fold AUC.",
+ "split_csv": "experiments/20261112-split/results/split.csv",
+ "split_csv_sha256": "1341b5c0de7ec0cf6395f336b2a186beca92f07eb61c7f2af20c1c737f964cd6",
+ "first_year": 2023,
+ "age_range_at_first_year": [25, 70],
+ "min_support": 20,
+ "lift_min_support": 30,
+ "candidates": {
+  "drug_misuse_ref": "drug abuse|opioid|overdose|misuses drugs",
+  "t2dm": "type 2 diabetes|diabetes mellitus type 2|type ii diabetes|due to diabetes",
+  "alcohol": "alcohol",
+  "criminal_record": "criminal record",
+  "severe_anxiety": "anxiety",
+  "depression": "depress",
+  "miscarriage": "miscarriage",
+  "ischemic_heart": "ischemic heart|myocard|coronary"
+ }
+}

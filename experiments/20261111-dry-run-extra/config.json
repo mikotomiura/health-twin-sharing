@@ -1,0 +1,48 @@
+{
+ "source_experiment": "experiments/20261111-llm-dry-run",
+ "taus": [
+  0.3,
+  0.5,
+  0.7,
+  0.9
+ ],
+ "e2": {
+  "designs": [
+   "natural",
+   "balanced"
+  ],
+  "sample_sizes": [
+   100,
+   200,
+   400,
+   800,
+   1600,
+   3200
+  ],
+  "reps": 40,
+  "min_feature_count": 3,
+  "taus": [
+   0.3,
+   0.5,
+   0.7
+  ]
+ },
+ "n_attacker_seeds": 3,
+ "tau_main": 0.5,
+ "judge_model": "qwen3:14b",
+ "judge_options": {
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "num_predict": 400,
+  "think": false
+ },
+ "paraphrase_model": "gemma3:12b",
+ "paraphrase_options": {
+  "temperature": 0.7,
+  "top_p": 0.95,
+  "num_predict": 600
+ },
+ "paraphrase_twin_seeds": [
+  0
+ ]
+}

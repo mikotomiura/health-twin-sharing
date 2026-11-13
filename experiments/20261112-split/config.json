@@ -1,0 +1,10 @@
+{
+ "_note": "Development / confirmation (held-out) split of the 10k cohort (cpu-prep, researcher 2026-11-12). Assignment per person: u = int(sha256('hts-split-' + SEED + ':' + pid)) / 2^256; dev if u < dev_share, else confirm. Persons used in earlier dry runs are forced to dev. Independent of the population definition, so any later pool is a subset with the same sides.",
+ "dev_share": 0.4,
+ "force_dev_from": [
+  "experiments/20261111-llm-dry-run/inputs/records.jsonl",
+  "experiments/20261112-a-type-misuse/inputs/records.jsonl",
+  "experiments/20261112-pilot-new-type/inputs/records.jsonl"
+ ],
+ "report_pool_config": "experiments/20261112-a-type-misuse/config.json"
+}

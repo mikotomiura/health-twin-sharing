@@ -1,0 +1,8 @@
+{
+  "window_s": 90,
+  "min_keys": 20,
+  "C": 0.1,
+  "n_boot": 2000,
+  "session": "file_1 only",
+  "filters": "drop mouse/Shift/Alt/Control/BackSpace; hold in (0,5] s; flight in (-1,3) s"
+}

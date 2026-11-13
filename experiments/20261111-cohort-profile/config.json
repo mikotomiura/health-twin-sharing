@@ -1,0 +1,21 @@
+{
+  "end_date": "2026-01-01",
+  "window_years": [0, 10],
+  "candidates": {
+    "drug_abuse": "drug abuse|opioid|overdose|substance",
+    "intimate_partner_abuse": "intimate partner abuse",
+    "criminal_record": "criminal record",
+    "pregnancy": "pregnan",
+    "hiv": "HIV|human immunodeficiency",
+    "depression_anxiety": "depress|anxiety|post-traumatic|stress disorder",
+    "severe_mental": "schizo|bipolar|psychos|suicid",
+    "alcohol": "alcohol",
+    "dementia": "alzheimer|dementia",
+    "diabetes_t2": "diabetes mellitus type 2",
+    "ckd": "chronic kidney disease",
+    "infertility_or_miscarriage": "miscarriage|infertil"
+  },
+  "min_cases_for_correlates": 5,
+  "min_prevalence_correlate": 0.02,
+  "top_correlates": 8
+}

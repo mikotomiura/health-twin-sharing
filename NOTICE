@@ -1,0 +1,12 @@
+health-twin-sharing
+Copyright 2026 Mikoto Miura
+
+This product uses data generated or published by third parties. The data are downloaded by the scripts and are not
+included in this repository.
+
+- TwinLLM synthetic cohorts (Synthea v4.0.0), Open Science Foundation, Apache-2.0.
+  https://github.com/Opening-Science/twin-llm
+- Synthea, The MITRE Corporation, Apache-2.0. https://github.com/synthetichealth/synthea
+- neuroQWERTY MIT-CSXPD dataset, PhysioNet, Open Data Commons Attribution License v1.0 (ODC-By 1.0).
+  Giancardo L, et al. Computer keyboard interaction as an indicator of early Parkinson's disease.
+  Sci Rep 6, 34468 (2016). doi:10.1038/srep34468. Dataset doi:10.13026/g0bd-1m78

@@ -1,0 +1,5 @@
+{
+ "_note": "Development cohort only (10k seed 42; decisions 判断 1・5). Lists and D2 rule: config/condition_lists.json. Lambda check of scripts/permute_lambda.py on the real cohort.",
+ "lambdas": [0.0, 0.5, 1.0],
+ "reps": 5
+}

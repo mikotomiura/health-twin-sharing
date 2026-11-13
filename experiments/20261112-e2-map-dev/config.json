@@ -1,0 +1,6 @@
+{
+ "_note": "E2 map prototype, development cohort only (10k seed 42; decisions 判断 1・5). Lists and D2 rule: config/condition_lists.json. D/K/lambda: decisions 判断 7・10・11. Preliminary; not for confirmatory analysis.",
+ "lambdas": [0.0, 0.5, 1.0],
+ "reps": 5,
+ "min_feature_count": 3
+}
