@@ -1,0 +1,24 @@
+{
+ "_note": "Throughput and CU of larger attackers on Colab (budget of the funded stage). Preliminary; not for confirmatory or preliminary conclusions (p values are not read). Attacker prompts are rebuilt from the releases of experiments/20261113-e1-colab-dryrun (development cohort, 4 persons) with the E1 code of the working tree; options as the confirmatory attacker.",
+ "source_exp": "experiments/20261113-e1-colab-dryrun",
+ "models": ["qwen3:14b", "qwen3:32b", "deepseek-r1:70b"],
+ "n_t0": 16,
+ "n_t3": 48,
+ "n_w1_t0": 8,
+ "n_w1_t3": 16,
+ "workers": [1, 4],
+ "attacker_options": {
+  "temperature": 0.6,
+  "top_p": 0.95,
+  "num_predict": 4096,
+  "think": true
+ },
+ "ollama_env": {
+  "OLLAMA_CONTEXT_LENGTH": "8192",
+  "OLLAMA_MAX_LOADED_MODELS": "1",
+  "OLLAMA_KEEP_ALIVE": "30m",
+  "OLLAMA_NUM_PARALLEL": "equal to workers"
+ },
+ "gpu": "H100",
+ "cu_cap": 30
+}

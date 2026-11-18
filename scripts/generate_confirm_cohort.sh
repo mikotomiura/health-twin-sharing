@@ -5,13 +5,16 @@
 #
 #   WORK=/content/synthea-work bash scripts/generate_confirm_cohort.sh test
 #       trial: TEST seeds, N=50 (allowed before the freeze)
-#   HTS_PREREG_FROZEN=yes SEED=<s> CLINICIAN_SEED=<cs> WORK=/content/synthea-work bash scripts/generate_confirm_cohort.sh confirm
-#       confirmatory 10k: seeds written in the frozen preregistration; refuses to run without the freeze flag
+#   HTS_PREREG_FROZEN=yes SHARD=<k> SEED=<s_k> CLINICIAN_SEED=<cs_k> WORK=/content/synthea-work bash scripts/generate_confirm_cohort.sh confirm
+#       confirmatory cohort = 4 shards of 10k (判断 34: 40k in all; one 40k run would need ~164 GB of FHIR on the VM, 4 x the ~41 GB of 10k).
+#       Run once per shard k = 1..4 with that shard's seed pair from the frozen preregistration; refuses to run without
+#       the freeze flag. Then join the shards with scripts/merge_cohort_shards.py (checks distinct seeds and unique pids).
 #
 # WORK must be a dedicated directory outside the PJ (it is created; only $WORK/out is replaced, and only when it holds
 # a manifest.json from an earlier run of this script).
-# Output: $WORK/out/fhir/*.json, $WORK/out/manifest.json (recipe + dates + content checksum), and
-#         $WORK/derived/{persons,conditions,encounters}.parquet when uv is available.
+# Output: $WORK/out/manifest.json (recipe + dates + shard + content checksum) and, when uv is available,
+#         $WORK/derived[-shard<k>]/{persons,conditions,encounters}.parquet + manifest.json. In confirm mode the FHIR files
+#         ($WORK/out/fhir) are deleted after the parquet and the manifest are written (disk); KEEP_FHIR=yes keeps them.
 set -euo pipefail
 
 MODE="${1:-}"
@@ -29,14 +32,16 @@ die() { echo "generate: $*" >&2; exit 1; }
 is_int() { [[ "$1" =~ ^(0|[1-9][0-9]{0,17})$ ]]; }   # canonical decimal, fits a Java long
 
 case "$MODE" in
-  test)    SEED=$TEST_SEED; CLINICIAN_SEED=$TEST_CLINICIAN_SEED; N=$TEST_N ;;
+  test)    SEED=$TEST_SEED; CLINICIAN_SEED=$TEST_CLINICIAN_SEED; N=$TEST_N; SHARD=0; DERIVED=derived ;;
   confirm) [[ "${HTS_PREREG_FROZEN:-}" == yes ]] || die "confirmatory generation only after the preregistration is frozen (set HTS_PREREG_FROZEN=yes)"
            [[ -n "${SEED:-}" && -n "${CLINICIAN_SEED:-}" ]] || die "SEED and CLINICIAN_SEED from the frozen preregistration are required"
            if ! is_int "$SEED" || ! is_int "$CLINICIAN_SEED"; then die "SEED and CLINICIAN_SEED must be non-negative integers"; fi
-           for s in "$SEED" "$CLINICIAN_SEED"; do
-             [[ "$s" != 42 && "$s" != 43 && "$s" != "$TEST_SEED" && "$s" != "$TEST_CLINICIAN_SEED" ]] || die "seed $s is a development or test seed"
+           for s in "$SEED" "$CLINICIAN_SEED"; do   # development seeds (42, 43, 44, 20261113) and the test seeds
+             [[ "$s" != 42 && "$s" != 43 && "$s" != 44 && "$s" != 20261113 && "$s" != "$TEST_SEED" && "$s" != "$TEST_CLINICIAN_SEED" ]] || die "seed $s is a development or test seed"
            done
-           N=10000 ;;
+           [[ "${SHARD:-}" =~ ^[1-4]$ ]] || die "SHARD must be 1, 2, 3 or 4 (判断 34: four shards of 10k)"
+           [[ "$SEED" != "$CLINICIAN_SEED" ]] || die "SEED and CLINICIAN_SEED must differ"
+           N=10000; DERIVED=derived-shard$SHARD ;;
   *) die "usage: $0 test|confirm" ;;
 esac
 
@@ -55,7 +60,28 @@ check_work "$(cd "$(dirname "$WORK")" && pwd -P)/$(basename "$WORK")"   # before
 mkdir -p "$WORK"
 WORK="$(cd "$WORK" && pwd -P)"
 check_work "$WORK"                                                     # after resolving .. and symlinks
+if [[ "$MODE" == confirm ]]; then  # checked before Synthea runs (hours for a 10k shard)
+  command -v uv >/dev/null || die "uv is required in confirm mode (the shard becomes parquet before its FHIR is deleted)"
+  [[ ! -e "$WORK/$DERIVED" ]] || die "$WORK/$DERIVED already exists; move it away first (each shard is made once)"
+fi
 command -v java >/dev/null || die "Java 21+ is required (on Colab: apt-get install -y openjdk-21-jre-headless)"
+
+# Provenance of this script and of the flattening code, fixed before Synthea runs (they go into the shard manifest).
+PJ_COMMIT=none
+if command -v git >/dev/null && git -C "$PJ" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  PJ_COMMIT="$(git -C "$PJ" rev-parse HEAD)"
+  if [[ "$MODE" == confirm ]]; then
+    git -C "$PJ" diff --quiet HEAD -- scripts/generate_confirm_cohort.sh scripts/profile_cohort.py pyproject.toml uv.lock \
+      || die "scripts/generate_confirm_cohort.sh, scripts/profile_cohort.py, pyproject.toml or uv.lock differs from HEAD in $PJ (commit or restore them)"
+    if git -C "$PJ" status --porcelain --untracked-files=all -- scripts | grep -q '^??'; then
+      die "untracked files in $PJ/scripts (commit or remove them)"
+    fi
+  fi
+elif [[ "$MODE" == confirm ]]; then
+  die "confirm mode needs git and $PJ as a git work tree (the shard manifest records pjCommit)"
+fi
+PROFILE_SHA="$(sha256sum "$PJ/scripts/profile_cohort.py" | awk '{print $1}')"
+JAVA_VERSION="$({ java -version 2>&1 || true; } | grep -m1 ' version ' | tr -d '"\\' || true)"   # quotes and backslashes removed: the value goes into JSON
 cd "$WORK"
 
 if [[ ! -d open-twin ]]; then git clone -q https://github.com/Opening-Science/open-twin.git; fi
@@ -91,6 +117,7 @@ cat > out/manifest.json <<EOF
   "syntheaVersion": "$SYNTHEA_VERSION",
   "jarSha256": "$SYNTHEA_JAR_SHA256",
   "mode": "$MODE",
+  "shard": $SHARD,
   "seed": $SEED,
   "clinicianSeed": $CLINICIAN_SEED,
   "population": $N,
@@ -98,12 +125,18 @@ cat > out/manifest.json <<EOF
   "referenceDate": "$REF_DATE",
   "endDate": "$REF_DATE",
   "fhirFileCount": $count,
-  "contentSha256": "$content"
+  "contentSha256": "$content",
+  "pjCommit": "$PJ_COMMIT",
+  "profileCohortSha256": "$PROFILE_SHA",
+  "javaVersion": "$JAVA_VERSION"
 }
 EOF
 cat out/manifest.json
 
 if command -v uv >/dev/null; then
-  (cd "$PJ" && uv run --frozen python scripts/profile_cohort.py "$WORK/out/fhir" "$WORK/derived")
-  sha256sum "$WORK"/derived/*.parquet
+  [[ "$(sha256sum "$PJ/scripts/profile_cohort.py" | awk '{print $1}')" == "$PROFILE_SHA" ]] || die "scripts/profile_cohort.py changed while Synthea ran (manifest records $PROFILE_SHA)"
+  (cd "$PJ" && uv run --frozen python scripts/profile_cohort.py "$WORK/out/fhir" "$WORK/$DERIVED")
+  cp out/manifest.json "$WORK/$DERIVED/manifest.json"
+  sha256sum "$WORK/$DERIVED"/*.parquet "$WORK/$DERIVED/manifest.json"
+  if [[ "$MODE" == confirm && "${KEEP_FHIR:-}" != yes ]]; then rm -rf out/fhir; echo "deleted $WORK/out/fhir (disk; the manifest keeps the content checksum)"; fi
 fi

@@ -1,4 +1,6 @@
-"""LLM dry run (run on Colab Pro with Ollama; the logic is testable locally with --backend fake).
+"""Note (confirmatory use): what the confirmatory path (scripts/e1_run.py, e1_build.py, e1_summarise.py) uses from this module is only Ollama, render_record, twin_messages. Every other function is for the exploratory dry runs and follows other rules than the v4 rules (action iff p > 0.5, balanced V): V = max(p, 1 - p), p >= tau, etc.
+
+LLM dry run (run on Colab Pro with Ollama; the logic is testable locally with --backend fake).
 
 For each person x recipient x policy x paraphrase x seed, the twin answers one question per time point
 (conversation history carried over time, as in [1]); the E1 attacker then reads K_r plus all releases so far
@@ -57,8 +59,10 @@ def audit_record(record: dict, sensitive_patterns: list[str]) -> dict:
 
 
 def render_record(record: dict) -> str:
-    lines = [f"Age {record['age']}, {record['gender']}. Year {record['year']}.",
-             f"Visits this year: {record['visits_this_year']}.", "Conditions on record (onset year):"]
+    lines = [f"Age {record['age']}, {record['gender']}. Year {record['year']}."]
+    if "visits_this_year" in record:  # the confirmatory E1 records have no visit count (判断 16)
+        lines.append(f"Visits this year: {record['visits_this_year']}.")
+    lines.append("Conditions on record (onset year):")
     lines += [f"- {c['display']} ({c['onset_year']})" for c in record["conditions"]] or ["- none"]
     return "\n".join(lines)
 

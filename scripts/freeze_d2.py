@@ -1,6 +1,6 @@
 """Freeze the D2 lists (defender knowledge from data) chosen on the development cohort into config/condition_lists.json.
 
-The preregistration (docs/preregistration-draft.md §3.1, §4.1) carries only the lists from the development cohort to the
+The preregistration (docs/preregistration-draft.md, OSF items "Explanation of foreknowledge and managing unintended influences" and "Manipulated variables") carries only the lists from the development cohort to the
 confirmatory cohort. This script recomputes them with the same rule as e2_map.py / dev_lists.py (d2_select on the
 lambda = 1 development cohort, 判断 9) and writes "D2_frozen" with the sha256 of the input parquet files.
 It refuses to overwrite an existing D2_frozen entry that differs, unless --force.

@@ -1,18 +1,72 @@
 {
- "_note": "Confirmatory E1 (docs/preregistration-draft.md v1; .steering/20261112-paper-write/decisions.md 判断 1-11; design .steering/20261112-e1-prereg-impl/design.md). To be frozen with the preregistration. Paraphrases 0-3 are those of experiments/20261111-llm-dry-run; 4-7 are new (same style axes: politeness, urgency, verbosity, format) and must be checked before the freeze.",
+ "_note": "Confirmatory E1 (docs/preregistration-draft.md; .steering/20261112-paper-write/decisions.md 判断 1-43; design .steering/20261112-e1-prereg-impl/design.md and .steering/20261113-prereg-v2/design.md). To be frozen with the preregistration. Paraphrases 0-3 are those of experiments/20261111-llm-dry-run; 4-7 are new (same style axes: politeness, urgency, verbosity, format) and were confirmed as drafted in 判断 14 (experiments/20261113-e1-colab-dryrun). k0n: the K0n control (K0 plus a neutral text as long as the K1 and K2 sentences; 判断 20) runs at this lambda and D only, default paraphrases. alpha_one_sided: the level of the Holm-adjusted one-sided p of H1 and H2 (判断 17); the final H1 / H2 decision is made by scripts/e2_summarise.py --e1. 判断 25・26: the primary V is the balanced 1/2 TPR + 1/2 TNR (the pi-weighted V is a secondary under pi_weighted); an action is p > tau (0.5 exactly is not an action). delta_E1 = 0.03 applies to the balanced dV (判断 27: kept; about 1.5 persons' action at 24+24, about 2.4 at 40+40); it is not part of the H1 decision (判断 22). One-sided bootstrap p = (b + 1) / (B + 1) (判断 32); missing reads over 10% trigger the H1 sensitivity analysis (判断 31); the sensitivity analysis also carries the fills adverse to H1 (fill_adverse, 判断 38). 判断 35: H1_K2_minus_K0 also carries dV_opt (the best rule, act iff p > pi) and dAUC as secondaries fixed in advance. 判断 36: the E1 summary is made once, after every stage has finished with exit code 0; scripts/e2_summarise.py --e1 stops unless completeness.complete is true. 判断 39: the H1 p that enters Holm is H1_K2_minus_K0.p_one_sided_permutation (sign-flip permutation test on the per-person contributions, n_flips = bootstrap.n); the bootstrap p_one_sided is reported only. 判断 40: n_A = n_not_A = 40 (was 24; the permutation test's power in the preliminary-like scenario, experiments/20261113-e1-power-permutation-n). 判断 41: the missing-read sensitivity analysis and the secondary contrasts also carry the sign-flip permutation p (p_one_sided_permutation; round 3 A1, A10), beside the bootstrap p, with no change to any decision rule; the model digests and the Ollama version are fixed in run.sh at the freeze and checked by e1_run.py before any model call (round 3 A7). 判断 42: run.sh runs only the 6 frozen test modules and its git checks cover exactly the frozen set. 判断 43: upstream documents follow the draft (no effect on this file). num_ctx 8192 を明示（2026-11-14。予備は既定値で、prompt＋生成 > 4096 の読みがあった）. 判断 44 (2026-11-14): H0d = manipulation check of K on the t0 reads at h0d.lambda (K3 picks up the person's D2 facts: mean of p0(K3) - p0(K2) higher for persons with any D2 display, 95% lower bound > 0, each group >= min_group persons; K1 and K2 stay at the stated overall rate: 90% interval of mean(p0 - rate) inside +-margin_rate); H1_scope is full only if H0b, H0c and H0d are all supported.",
  "attribute": "drug_misuse",
- "years": [2023, 2024, 2025],
- "n_A": 24,
- "n_not_A": 24,
- "lambdas": [0, 1],
- "defenders": ["D0", "D1", "D2"],
- "knowledge_levels": ["K0", "K1", "K2", "K3"],
- "attack_plan": {"D0": ["K0", "K1", "K2", "K3"], "D1": ["K2", "K3"], "D2": ["K2", "K3"]},
- "base_point": {"lambda": 1, "D": "D0", "n_paraphrases": 8, "K": ["K2", "K3"]},
+ "years": [
+  2023,
+  2024,
+  2025
+ ],
+ "n_A": 40,
+ "n_not_A": 40,
+ "lambdas": [
+  0,
+  1
+ ],
+ "defenders": [
+  "D0",
+  "D1",
+  "D2"
+ ],
+ "knowledge_levels": [
+  "K0",
+  "K1",
+  "K2",
+  "K3",
+  "K0n"
+ ],
+ "k0n": {
+  "lambda": 1,
+  "D": "D0"
+ },
+ "alpha_one_sided": 0.025,
+ "attack_plan": {
+  "D0": [
+   "K0",
+   "K1",
+   "K2",
+   "K3"
+  ],
+  "D1": [
+   "K2",
+   "K3"
+  ],
+  "D2": [
+   "K2",
+   "K3"
+  ]
+ },
+ "base_point": {
+  "lambda": 1,
+  "D": "D0",
+  "n_paraphrases": 8,
+  "K": [
+   "K2",
+   "K3"
+  ]
+ },
  "n_paraphrases_default": 2,
  "n_seeds": 3,
- "calibration": {"lambda": 1, "D": "D0", "K": "K2", "q": [0, 0.5, 1],
-                 "sentence": "Note: this person has a history of drug misuse."},
+ "calibration": {
+  "lambda": 1,
+  "D": "D0",
+  "K": "K2",
+  "q": [
+   0,
+   0.5,
+   1
+  ],
+  "sentence": "Note: this person has a history of drug misuse."
+ },
  "attribute_question": "this person has a history of drug misuse or dependence",
  "recipient": {
   "id": "employer",
@@ -33,14 +87,45 @@
  "twin_model": "gemma3:12b",
  "attacker_model": "qwen3:14b",
  "judge_model": "qwen3:14b",
- "twin_options": {"temperature": 0.2, "top_p": 0.95, "num_predict": 1000},
- "attacker_options": {"temperature": 0.6, "top_p": 0.95, "num_predict": 4096, "think": true},
- "judge_options": {"temperature": 0.0, "top_p": 1.0, "num_predict": 400, "think": false},
+ "twin_options": {
+  "temperature": 0.2,
+  "top_p": 0.95,
+  "num_predict": 1000,
+  "num_ctx": 8192
+ },
+ "attacker_options": {
+  "temperature": 0.6,
+  "top_p": 0.95,
+  "num_predict": 4096,
+  "num_ctx": 8192,
+  "think": true
+ },
+ "judge_options": {
+  "temperature": 0.0,
+  "top_p": 1.0,
+  "num_predict": 400,
+  "num_ctx": 8192,
+  "think": false
+ },
  "attacker_template": 0,
  "max_retries": 2,
- "utility_plan": {"lambda": 1},
+ "utility_plan": {
+  "lambda": 1
+ },
  "tau": 0.5,
- "taus_secondary": [0.5, 0.9],
- "bootstrap": {"n": 10000, "ci": 0.95, "ci_equivalence": 0.90},
- "delta_E1": 0.03
+ "taus_secondary": [
+  0.5,
+  0.9
+ ],
+ "bootstrap": {
+  "n": 10000,
+  "ci": 0.95,
+  "ci_equivalence": 0.9
+ },
+ "delta_E1": 0.03,
+ "h0d": {
+  "lambda": 1,
+  "margin_rate": 0.05,
+  "min_group": 5
+ }
 }

@@ -1,13 +1,13 @@
 """Confirmatory E1, step 2 (Colab with Ollama; the logic runs locally with --backend fake).
 
-Preregistration: docs/preregistration-draft.md (v1) §4.3, §7, §8; design .steering/20261112-e1-prereg-impl/design.md.
+Preregistration: docs/preregistration-draft.md (v4: OSF items Data collection procedures, Starting and stopping rules, Missing data); design .steering/20261112-e1-prereg-impl/design.md.
 Reads <exp>/config.json, SEED, inputs/{records,knowledge}.jsonl|json (scripts/e1_build.py). Each stage appends to
 <exp>/results/<stage>.jsonl and skips keys already written, so a re-run resumes after a Colab interruption.
 
   twin     cell = person x lambda x D x paraphrase x twin seed; paraphrases 0..7 at the base point (lambda, D), else
            0..n_paraphrases_default-1. Three time points with the conversation history (as the pilot).
-  attack   plan (判断 11): per lambda, D0 x K0..K3 and D1, D2 x K2, K3; base-point paraphrases beyond the default only
-           with the base-point K list. t0 = person x lambda x K (no release; does not depend on D), t3 = cell x K.
+  attack   plan (判断 11): per lambda, D0 x K0..K3 and D1, D2 x K2, K3, plus K0n (config "k0n": lambda 1, D0, default
+           paraphrases only; 判断 20); base-point paraphrases beyond the default only with the base-point K list. t0 = person x lambda x K (no release; does not depend on D), t3 = cell x K.
            qwen3 thinking, integer percentage (pilot stats_think), template 0, attacker seed fixed.
   calib    H0b: at (lambda, D, K) of config "calibration", for a share q of the A persons (chosen with SEED) the label
            sentence is appended to the third release and the attacker reads again. Unlabelled reads are identical to
@@ -16,24 +16,31 @@ Reads <exp>/config.json, SEED, inputs/{records,knowledge}.jsonl|json (scripts/e1
            once the whole cell exists; a cell with any failed time point is missing at every time point. The five items
            must be JSON booleans. Truncated answers (done_reason "length") of the attacker and the judge are failures too.
 Failures (no probability; empty or truncated answer, done_reason "length"): up to max_retries more calls with a shifted
-seed; then the row is kept as missing (§8): p = null for the attacker; for the twin "failed": true, and every attack /
+seed (also when prompt_count + eval_count >= options.num_ctx: reason "ctx_overflow"; every row keeps the reason of each attempt in
+"attempt_reasons"); a server that does not answer is not an attempt: same seed after HTTP_WAITS, then the stage stops without
+writing the row (resume); then the row is kept as missing (OSF item Missing data): p = null for the attacker; for the twin "failed": true, and every attack /
 calib / utility read of that cell is written as missing (reason "twin_missing") without a model call.
 Safety for resuming on Colab: a truncated last JSONL line is dropped before appending; results/fingerprint.json pins the
 backend, config, SEED, inputs and the code (a re-run with anything different, or results without a fingerprint, is
-refused); results/versions.jsonl appends the
+refused); results/.lock (O_EXCL) stops a second process on the same results/; results/versions.jsonl appends the
 model digests at each run and a changed digest is refused. Reads skipped because the twin stage is unfinished are
 counted and make the exit code 3.
 
 Usage: python scripts/e1_run.py <exp-dir> --stage twin|attack|calib|utility|all [--backend ollama|fake] [--workers 4]
        python scripts/e1_run.py <exp-dir> --plan      # print the job counts per stage (no model calls)
+       Optional: --expect-digests gemma3:12b=<digest>,qwen3:14b=<digest> --expect-ollama <version> (round 3 A7): refuse before
+       any model call, on every run, when the live digests / Ollama version differ (run.sh passes the values fixed at the freeze).
 """
 from __future__ import annotations
 
 import argparse
+import contextlib
 import datetime
 import hashlib
+import http.client
 import itertools
 import json
+import os
 import sys
 import threading
 import time
@@ -45,6 +52,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parent))
 from e1_build import known_text  # noqa: E402
+from permute_lambda import check_confirm_seed  # noqa: E402
 from llm_dry_run import Ollama, render_record, twin_messages  # noqa: E402  (Ollama: base class of OllamaDR)
 from llm_dry_run_attacker import ATTACK_USERS_PCT, PCT_SCHEMA, UTIL_USER_FULL, FakePct, parse_pct  # noqa: E402
 from llm_dry_run_extra import ATTACK_SYSTEMS, UTIL_ITEMS, UTIL_SCHEMA, UTIL_SYSTEM, load_jsonl, run_jobs, timing  # noqa: E402
@@ -119,6 +127,7 @@ class Exp:
         self.exp = exp
         self.cfg = json.loads((exp / "config.json").read_text(encoding="utf-8"))
         self.seed = int((exp / "SEED").read_text().strip())
+        check_confirm_seed(self.seed)
         self.kn = json.loads((exp / "inputs" / "knowledge.json").read_text(encoding="utf-8"))
         self.rows = {(r["pid"], r["lambda"], r["D"]): r for r in load_jsonl(exp / "inputs" / "records.jsonl")}
         self.res = exp / "results"
@@ -138,9 +147,12 @@ class Exp:
         return out
 
     def ks_for(self, lam, d, k) -> list[str]:
-        ks = self.cfg["attack_plan"][d]
+        ks = list(self.cfg["attack_plan"][d])
         if k >= self.cfg["n_paraphrases_default"]:  # extra base-point paraphrases (H3)
-            ks = [x for x in ks if x in self.cfg["base_point"]["K"]]
+            return [x for x in ks if x in self.cfg["base_point"]["K"]]
+        k0n = self.cfg.get("k0n")  # K0n control (判断 20): one (lambda, D) only, default paraphrases
+        if k0n and (lam, d) == (k0n["lambda"], k0n["D"]):
+            ks.append("K0n")
         return ks
 
     def attack_jobs(self) -> list[tuple]:
@@ -199,13 +211,57 @@ class Exp:
                     name=self.cfg["recipient"]["name"], known=known, rel=rel, a=self.cfg["attribute_question"])}]
 
 
-def with_retries(be, model, msgs, seed, opts, fmt, ok, max_retries: int) -> tuple[dict, int, bool]:
-    """ok(out) -> bool. Returns (last output, attempt index, success)."""
+def attempt_reason(out: dict, num_ctx: int | None) -> str | None:
+    """Why an attempt counts as a context overflow ("ctx_overflow") or else its done_reason. prompt_count + eval_count >= num_ctx
+    means the prompt plus the generation filled the context window (Ollama then truncates silently); not checked without num_ctx."""
+    pc, ec = out.get("prompt_count"), out.get("eval_count")
+    if num_ctx is not None and isinstance(pc, int) and isinstance(ec, int) and pc + ec >= num_ctx:
+        return "ctx_overflow"
+    return out.get("done_reason")
+
+
+# A server that does not answer (connection refused / reset, timeout, HTTP error) is NOT a failed attempt: the same call is
+# repeated with the SAME seed after these waits, and if the server still does not answer, the stage stops without writing the
+# row (it is run on resume), so no read is missing and no seed depends on an infrastructure accident (review 2026-11-14 HIGH).
+HTTP_WAITS = (30, 120, 300)
+_sleep = time.sleep
+SERVER_DOWN = threading.Event()  # set once the server is judged down: the other workers stop at once instead of waiting too
+
+
+class ServerDown(RuntimeError):
+    """The model server did not answer after HTTP_WAITS; the stage stops and nothing is written for this read."""
+
+
+def chat_answered(be, model, msgs, seed, opts, fmt) -> dict:
+    """be.chat, repeated with the same seed while the server does not answer (OSError covers URLError, timeouts, refused /
+    reset connections; HTTPException covers RemoteDisconnected / IncompleteRead); raises ServerDown after HTTP_WAITS."""
+    for k in range(len(HTTP_WAITS) + 1):
+        if SERVER_DOWN.is_set():
+            raise ServerDown("the model server was judged down by another worker; resume with the same command")
+        try:
+            return be.chat(model, msgs, seed, opts, fmt=fmt)
+        except (OSError, http.client.HTTPException) as e:
+            if k == len(HTTP_WAITS):
+                SERVER_DOWN.set()
+                raise ServerDown(f"the model server did not answer ({type(e).__name__}: {e}) after waits {HTTP_WAITS} s; "
+                                 f"nothing is written for this read; resume with the same command") from e
+            print(f"[e1_run] server did not answer ({type(e).__name__}); same seed again in {HTTP_WAITS[k]} s", flush=True)
+            _sleep(HTTP_WAITS[k])
+    raise AssertionError("unreachable")
+
+
+def with_retries(be, model, msgs, seed, opts, fmt, ok, max_retries: int) -> tuple[dict, int, bool, list]:
+    """ok(out) -> bool. Returns (last output, attempt index, success, reason of every attempt). An attempt fails if ok() is false
+    or if prompt_count + eval_count >= options.num_ctx (reason "ctx_overflow"; skipped when options has no num_ctx); the next
+    attempt shifts the seed. A server that does not answer is not an attempt (chat_answered: same seed, then ServerDown)."""
+    num_ctx, reasons = opts.get("num_ctx"), []
     for attempt in range(max_retries + 1):
-        out = be.chat(model, msgs, (seed + attempt * SEED_SHIFT) % SEED_MOD, opts, fmt=fmt)
-        if ok(out):
-            return out, attempt, True
-    return out, attempt, False
+        out = chat_answered(be, model, msgs, (seed + attempt * SEED_SHIFT) % SEED_MOD, opts, fmt)
+        reason = attempt_reason(out, num_ctx)
+        reasons.append(reason)
+        if reason != "ctx_overflow" and ok(out):
+            return out, attempt, True, reasons
+    return out, attempt, False, reasons
 
 
 def not_cut(out: dict) -> bool:
@@ -244,7 +300,7 @@ def releases_of(x: Exp) -> dict[str, dict[int, dict]]:
     """cell -> t -> twin row (text, failed)."""
     rel: dict[str, dict[int, dict]] = {}
     for r in load_jsonl(x.res / "twin.jsonl"):
-        rel.setdefault(r["cell"], {})[r["t"]] = r
+        rel.setdefault(r["cell"], {}).setdefault(r["t"], r)  # a duplicated key: the row written first wins
     return rel
 
 
@@ -276,17 +332,17 @@ def stage_twin(x: Exp, be, workers: int) -> None:
             else:
                 meta = {"key": key, "cell": ck, "pid": pid, "A": row["A"], "lambda": lam, "D": d, "paraphrase": k,
                         "seed_idx": s, "t": t, "audit_removed": rec["audit_removed"], "coarsened": rec["coarsened"]}
-                if failed_before:  # the cell is missing anyway (§8): do not spend calls on the later time points
+                if failed_before:  # the cell is missing anyway (OSF item Missing data): do not spend calls on the later time points
                     sink.write(meta | {"text": "", "failed": True, "reason": "earlier_time_point_failed", "attempts": 0})
                     n_failed.add()
                     continue
-                out, att, good = with_retries(be, cfg["twin_model"], msgs, x.seed + 1000 * s, cfg["twin_options"],
+                out, att, good, rsn = with_retries(be, cfg["twin_model"], msgs, x.seed + 1000 * s, cfg["twin_options"],
                                               None, twin_ok, cfg["max_retries"])
                 text, failed_before = out["text"], not good
                 if not good:
                     n_failed.add()
                 sink.write(meta | {"text": text, "failed": not good, "done_reason": out.get("done_reason"),
-                                   "attempts": att + 1, **timing(out)})
+                                   "attempts": att + 1, "attempt_reasons": rsn, **timing(out)})
             history += [msgs[-1], {"role": "assistant", "content": text}]
 
     run_jobs(jobs, fn, workers, "twin")
@@ -323,10 +379,10 @@ def stage_attack(x: Exp, be, workers: int, skips: Skips) -> None:
             sink.write(base | {"p": None, "reason": "twin_missing", "attempts": 0})
             return
         msgs = x.attack_messages(x.known(kk, pid, lam), texts)
-        out, att, good = with_retries(be, cfg["attacker_model"], msgs, x.seed + 7, cfg["attacker_options"], PCT_SCHEMA,
+        out, att, good, rsn = with_retries(be, cfg["attacker_model"], msgs, x.seed + 7, cfg["attacker_options"], PCT_SCHEMA,
                                       attack_ok, cfg["max_retries"])
         sink.write(base | {"p": parse_pct(out["text"]) if good else None, "done_reason": out.get("done_reason"),
-                           "attempts": att + 1, "raw": out["text"], **timing(out)})
+                           "attempts": att + 1, "attempt_reasons": rsn, "raw": out["text"], **timing(out)})
 
     run_jobs(jobs, fn, workers, "attack")
     print(f"[attack] cut lines dropped on resume: {sink.dropped}", flush=True)
@@ -352,10 +408,10 @@ def stage_calib(x: Exp, be, workers: int, skips: Skips) -> None:
             return
         texts[-1] = texts[-1].rstrip() + "\n\n" + c["sentence"]
         msgs = x.attack_messages(x.known(c["K"], pid, lam), texts)
-        out, att, good = with_retries(be, cfg["attacker_model"], msgs, x.seed + 7, cfg["attacker_options"], PCT_SCHEMA,
+        out, att, good, rsn = with_retries(be, cfg["attacker_model"], msgs, x.seed + 7, cfg["attacker_options"], PCT_SCHEMA,
                                       attack_ok, cfg["max_retries"])
         sink.write(base | {"p": parse_pct(out["text"]) if good else None, "done_reason": out.get("done_reason"),
-                           "attempts": att + 1, "raw": out["text"], **timing(out)})
+                           "attempts": att + 1, "attempt_reasons": rsn, "raw": out["text"], **timing(out)})
 
     run_jobs(jobs, fn, workers, "calib")
     print(f"[calib] cut lines dropped on resume: {sink.dropped}", flush=True)
@@ -383,7 +439,7 @@ def stage_utility(x: Exp, be, workers: int, skips: Skips) -> None:
         tw = rel[x.ckey(cell)][t]
         base = {"key": f"{x.ckey(cell)}|t{t}", "pid": pid, "A": row["A"], "lambda": lam, "D": d, "paraphrase": k,
                 "seed_idx": s, "t": t}
-        if failed:  # any time point of the cell failed -> every time point is missing (§8, cell level)
+        if failed:  # any time point of the cell failed -> every time point is missing (OSF item Missing data, cell level)
             sink.write(base | {"items": None, "reason": "twin_missing", "attempts": 0})
             return
         full = dict(row["records"][t - 1]) | {"conditions": row["records_full"][t - 1]["conditions"]}
@@ -391,10 +447,10 @@ def stage_utility(x: Exp, be, workers: int, skips: Skips) -> None:
                 {"role": "user", "content": UTIL_USER_FULL.format(name=rcp["name"], question=rcp["question"],
                                                                   record=render_record(full), answer=tw["text"])}]
 
-        out, att, good = with_retries(be, cfg["judge_model"], msgs, x.seed + 11, cfg["judge_options"], UTIL_SCHEMA,
+        out, att, good, rsn = with_retries(be, cfg["judge_model"], msgs, x.seed + 11, cfg["judge_options"], UTIL_SCHEMA,
                                       lambda o: judge_items(o["text"]) is not None and not_cut(o), cfg["max_retries"])
         sink.write(base | {"items": judge_items(out["text"]) if good else None, "done_reason": out.get("done_reason"),
-                           "attempts": att + 1, "raw": out["text"], **timing(out)})
+                           "attempts": att + 1, "attempt_reasons": rsn, "raw": out["text"], **timing(out)})
 
     run_jobs(jobs, fn, workers, "utility")
     print(f"[utility] cut lines dropped on resume: {sink.dropped}", flush=True)
@@ -403,9 +459,11 @@ def stage_utility(x: Exp, be, workers: int, skips: Skips) -> None:
 CODE = ["e1_run.py", "e1_build.py", "llm_dry_run.py", "llm_dry_run_attacker.py", "llm_dry_run_extra.py"]
 
 
-def check_provenance(x: Exp, backend: str, be) -> None:
+def check_provenance(x: Exp, backend: str, be, expect_digests: dict | None = None, expect_ollama: str | None = None) -> None:
     """Refuse to resume with another backend, config, SEED, inputs or code (prompt constants live in the scripts), or
-    with changed / unknown model digests. Results without a fingerprint are refused too."""
+    with changed / unknown model digests. Results without a fingerprint are refused too.
+    expect_digests / expect_ollama (round 3 A7; fixed in run.sh at the freeze): the live digest of every model in use and the live
+    Ollama version must equal them, on the first run and on every resume, before any model call; otherwise SystemExit."""
     here = Path(__file__).resolve().parent
     fp = {"backend": backend, "config.json": sha256(x.exp / "config.json"), "SEED": x.seed,
           "records.jsonl": sha256(x.exp / "inputs" / "records.jsonl"),
@@ -426,6 +484,13 @@ def check_provenance(x: Exp, backend: str, be) -> None:
     prev = load_jsonl(vf)
     if any(d is None for d in v["models"].values()):
         raise SystemExit(f"a model is not available (digest None): {v['models']}")
+    if expect_digests is not None:
+        bad = {m: (expect_digests.get(m), v["models"].get(m)) for m in set(v["models"]) | set(expect_digests)
+               if expect_digests.get(m) != v["models"].get(m)}  # an expected model not in use stops too
+        if bad:
+            raise SystemExit(f"model digest differs from the expected one fixed at the freeze (model: (expected, live)): {bad}")
+    if expect_ollama is not None and v.get("ollama") != expect_ollama:
+        raise SystemExit(f"Ollama version {v.get('ollama')} differs from the expected {expect_ollama} fixed at the freeze")
     if prev and prev[0]["versions"].get("ollama") != v.get("ollama"):
         print(f"[e1_run] WARNING: Ollama version changed {prev[0]['versions'].get('ollama')} -> {v.get('ollama')}",
               flush=True)
@@ -433,6 +498,27 @@ def check_provenance(x: Exp, backend: str, be) -> None:
         raise SystemExit(f"model digests changed since the first run: {prev[0]['versions']['models']} -> {v['models']}")
     with vf.open("a", encoding="utf-8", newline="\n") as fh:
         fh.write(json.dumps({"time": datetime.datetime.now(datetime.timezone.utc).isoformat(), "versions": v}) + "\n")
+
+
+LOCK = ".lock"
+
+
+@contextlib.contextmanager
+def run_lock(res: Path):
+    """results/.lock (O_CREAT|O_EXCL) for the length of a run: a second process on the same results/ stops. Removed on exit
+    (normal or exception). A crash that kills the process hard leaves it behind: check that nothing runs, then delete it."""
+    path = res / LOCK
+    try:
+        fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+    except FileExistsError:
+        raise SystemExit(f"{path} exists: another process is running on this results/ (or a previous run died; "
+                         f"check that nothing runs, then delete the file by hand)")
+    try:
+        os.write(fd, f"pid {os.getpid()}\n".encode())
+        os.close(fd)
+        yield
+    finally:
+        path.unlink(missing_ok=True)
 
 
 def plan(x: Exp) -> dict:
@@ -451,20 +537,33 @@ def main() -> None:
     ap.add_argument("--host", default="http://127.0.0.1:11434")
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--plan", action="store_true")
+    ap.add_argument("--expect-digests", default=None, metavar="MODEL=DIGEST,...",
+                    help="live digest of each model must equal these (checked before any model call, every run); the digest string "
+                         "is the one in results/versions.jsonl; run.sh passes the values fixed at the freeze")
+    ap.add_argument("--expect-ollama", default=None, help="live Ollama version must equal this (checked like --expect-digests)")
     a = ap.parse_args()
     x = Exp(a.exp)
     if a.plan or not a.stage:
         print(json.dumps(plan(x), indent=1))
         return
     be = OllamaDR(a.host) if a.backend == "ollama" else FakePct()
-    check_provenance(x, a.backend, be)
+    exd = None
+    if a.expect_digests:
+        exd = {}
+        for part in a.expect_digests.split(","):
+            m, sep, d = part.partition("=")  # the model name holds ":" but no "="; the digest may hold ":" (sha256:...)
+            if not sep or not m or not d:
+                raise SystemExit(f"--expect-digests: bad item {part!r} (want MODEL=DIGEST)")
+            exd[m] = d
     stages = ["twin", "attack", "calib", "utility"] if a.stage == "all" else [a.stage]
     skips = Skips()
-    for st in stages:
-        if st == "twin":
-            stage_twin(x, be, a.workers)
-        else:
-            {"attack": stage_attack, "calib": stage_calib, "utility": stage_utility}[st](x, be, a.workers, skips)
+    with run_lock(x.res):
+        check_provenance(x, a.backend, be, exd, a.expect_ollama)
+        for st in stages:
+            if st == "twin":
+                stage_twin(x, be, a.workers)
+            else:
+                {"attack": stage_attack, "calib": stage_calib, "utility": stage_utility}[st](x, be, a.workers, skips)
     if skips.n:
         print(f"[e1_run] {skips.n} reads skipped because the twin stage has not finished their cells", flush=True)
         sys.exit(3)

@@ -1,5 +1,5 @@
 {
- "_note": "Defender knowledge lists for the two attributes (positioning §5: D0 label and aliases / D1 literature list / D2 lift from the development cohort). D2 is not listed here: it is derived from the development cohort by d2_select() in scripts/permute_lambda.py with the 'd2' rule (tables: scripts/dev_lists.py). Decisions: .steering/20261112-cpu-prep/decisions.md 判断 4・6・8・9. To be frozen in the preregistration. Patterns are case-insensitive regular expressions on the Synthea condition display.",
+ "_note": "Defender knowledge lists for the two attributes (positioning §5: D0 label and aliases / D1 literature list / D2 lift from the development cohort). D2 is listed under \"D2_frozen\" (frozen from the development cohort by scripts/freeze_d2.py; the confirmatory runs use it via --d2-from-config); the 'd2' rule above (d2_select() in scripts/permute_lambda.py, tables: scripts/dev_lists.py) is how it was chosen. Decisions: .steering/20261112-cpu-prep/decisions.md 判断 4・6・8・9. To be frozen in the preregistration. Patterns are case-insensitive regular expressions on the Synthea condition display.",
  "first_year": 2023,
  "age_range_at_first_year": [25, 70],
  "d2": {"min_n_condition": 30, "min_n_joint": 10, "min_lift": 2.0},

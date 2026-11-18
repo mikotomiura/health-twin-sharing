@@ -1,0 +1,10 @@
+{
+ "_note": "Exploratory [X] (attack-me manuscript round 3, R1 M-1): does a flexible learner extract more leakage from the audited record than the preregistered main-effects logistic regression? Same cohort, population, D0/D2 lists and features as experiments/20261117-e2-confirm (scripts/e2_map.py helpers, --d2-from-config); lambda 1 only, original sample only (no person bootstrap), one 5-fold person-level split shared by both learners. Interval: 2,000 person resamples of the fixed out-of-fold predictions (sampling uncertainty of the evaluation only; refitting is not repeated).",
+ "attribute": "drug_misuse",
+ "lambda": 1.0,
+ "learners": {"logistic": {"C": 1.0, "max_iter": 3000}, "hist_gradient_boosting": {"max_iter": 300, "learning_rate": 0.05, "max_leaf_nodes": 31, "min_samples_leaf": 20, "l2_regularization": 1.0}},
+ "folds": 5,
+ "eval_resamples": 2000,
+ "min_feature_count": 3,
+ "ci": 0.95
+}

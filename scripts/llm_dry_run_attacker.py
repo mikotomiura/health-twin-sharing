@@ -1,4 +1,6 @@
-"""Dry run for decision 5 of the dry run: stronger E1 attackers, finer posteriors, and the utility re-score.
+"""Note (confirmatory use): what the confirmatory path (scripts/e1_run.py, e1_build.py, e1_summarise.py) uses from this module is only ATTACK_USERS_PCT, PCT_SCHEMA, UTIL_USER_FULL, FakePct, parse_pct. Every other function is for the exploratory dry runs and follows other rules than the v4 rules (action iff p > 0.5, balanced V): V = max(p, 1 - p), p >= tau, etc.
+
+Dry run for decision 5 of the dry run: stronger E1 attackers, finer posteriors, and the utility re-score.
 
 Reuses the 864 releases of experiments/20261111-llm-dry-run. Stages (all on Colab, Ollama):
   utility : the judge grades each release against the FULL record (the audited record made the judge call drug mentions
@@ -59,7 +61,10 @@ def parse_pct(text: str) -> float | None:
         v = float(json.loads(text)["p_percent"])
     except Exception:
         m = re.search(r'"p_percent"\s*:\s*([0-9.]+)', text or "")
-        v = float(m.group(1)) if m else None
+        try:
+            v = float(m.group(1)) if m else None
+        except ValueError:  # e.g. "1.2.3" or "."
+            v = None
     return v / 100 if v is not None and 0 <= v <= 100 else None
 
 

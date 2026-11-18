@@ -1,4 +1,7 @@
-"""Build per-person, per-time-point records for the LLM dry run from the flattened cohort tables.
+"""For the development dry run only. The confirmatory path (e1_build.py, e2_map.py) uses permute_lambda.population() and does not use this script.
+It differs from the confirmatory records (判断 16: no visit count) in that it emits the visit count (visits_this_year) and known_correlate.
+
+Build per-person, per-time-point records for the LLM dry run from the flattened cohort tables.
 
 A person's record at year y = age, gender, visits in y, and conditions with onset year <= y that were not abated
 before y. A = the person has a condition matching cfg["attribute"]["pattern"] with onset before the first time point;

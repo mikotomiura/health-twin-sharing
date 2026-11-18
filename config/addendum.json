@@ -1,0 +1,73 @@
+{
+ "_note": "Addendum 1 to the v4 preregistration (OSF s5m9t): generalisation checks of H1 across attackers (A) and of H2 across attributes and cohorts (B). Read by scripts/addendum_reattack.py (--confirm), addendum_a_summarise.py, addendum_b_e2.py (--confirm) and addendum_b_summarise.py. Directions = those predicted in v4 (K2 > K0, D0 > D2; lambda1 > lambda0 for GB2). Consistent unit: A = one-sided sign-flip permutation p of K2 - K0 <= alpha, complete, no H1 condition (K2, K0) over 10% missing; B primary = lower bound of the 95% interval > 0 and estimate > delta_E2; B secondary = lower bound > 0. Supported = at least m of 3. The registered text (docs/preregistration-addendum-1-en.md) is authoritative.",
+ "A": {
+  "attackers": [
+   "gpt-oss:20b",
+   "muse-glimmer:30b",
+   "magistral:24b"
+  ],
+  "think": {
+   "gpt-oss:20b": true,
+   "muse-glimmer:30b": "low",
+   "magistral:24b": true
+  },
+  "think_note": "Passed as --think to scripts/addendum_reattack.py; the output file is attack_<model>_think-<value>.jsonl. true is the value v4's E1 passes. magistral:24b produced no thinking under structured output in the dry run (a non-reasoning attacker).",
+  "digests": {
+   "gpt-oss:20b": "f38aa0c53da5f8c49d08c43a99df24ff53167fe68e24664a7777288e7656fdfe",
+   "muse-glimmer:30b": "de878ce33ad81d060001db1469a02eebe4d86f0ad58cfe52dc062fdcbe4464c1",
+   "magistral:24b": "27bcbbf6d32417d3a8a12d5eb9bd55fda6e5591807e2b02aaaf4423899925afc"
+  },
+  "ks": [
+   "K0",
+   "K1",
+   "K0n",
+   "K2"
+  ],
+  "lambda": 1,
+  "D": "D0",
+  "m_consistent": 2,
+  "primary_contrast": "H1_K2_minus_K0",
+  "alpha": 0.025,
+  "decision": "one-sided sign-flip permutation p of K2 - K0 (v4's H1 statistic) <= alpha, unadjusted; complete; neither K2 nor K0 (lambda 1, D0) over 10% missing reads or unusable persons",
+  "ollama": "0.40.16",
+  "twin_sha256": "ddeea2c776f4eed5a2c5f80322f7d83368467b35c16f2266aef261c4e041883a",
+  "reasoning": {
+   "gpt-oss:20b": true,
+   "muse-glimmer:30b": true,
+   "magistral:24b": false
+  },
+  "inclusion_rule": "(1) fits a Colab L4, accepts think, returns the structured JSON probability within num_predict 4096 for all probe reads; (2) within a K its output depends on the release (not the same value for every read); (3) reasoning models first; if fewer than 3 pass, a model of another developer passing (1) and (2) is added and marked non-reasoning.",
+  "run_order": [
+   "muse-glimmer:30b",
+   "gpt-oss:20b",
+   "magistral:24b"
+  ],
+  "run_order_note": "Run one attacker at a time in this order (the most expensive first); no read p is summarised or looked at until all three are finished or stopped."
+ },
+ "B": {
+  "attributes": [
+   "drug_misuse",
+   "diabetes_t2",
+   "severe_anxiety"
+  ],
+  "n_cohorts": 3,
+  "cohort_size": 10000,
+  "threads": 4,
+  "m_consistent_per_attribute": 2,
+  "primary_contrast": [
+   "D0_minus_D2",
+   1.0,
+   "K2"
+  ],
+  "secondary_contrast": [
+   "lambda1_minus_lambda0",
+   "D0",
+   "K2"
+  ],
+  "ci": 0.95,
+  "ci_equivalence": 0.9,
+  "consistent_primary": "lower bound of the 95% interval > 0 and estimate > delta_E2 (0.005)",
+  "consistent_secondary": "lower bound of the 95% interval > 0",
+  "confirm": true
+ }
+}

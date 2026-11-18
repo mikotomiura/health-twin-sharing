@@ -1,0 +1,12 @@
+{
+ "_note": "Confirmatory E2 (docs/preregistration-draft.md v4: OSF items Indices, Statistical models, Inference criteria, Missing data). To be frozen with the preregistration. Read by scripts/e2_map.py (lambdas, reps, min_feature_count, bootstrap_persons; run with --d2-from-config) and scripts/e2_summarise.py (the rest). bootstrap_persons: each rep resamples the persons with replacement (strata: A) before the permutation and the CV (判断 18); false reproduces the earlier development runs. alpha_one_sided: the level of the Holm-adjusted one-sided p of H1 and H2 (判断 17). 判断 25: the primary estimator is dV_bal (balanced accuracy, p > 0.5; dV_acc and dV_conf secondary). delta_E2 = 0.005 (判断 27: twice the development lambda=0 dV_bal floor 0.0013, rounded up). 判断 28: with bootstrap_persons the R = 200 per-rep values are the person-bootstrap distribution; the interval is its (1-ci)/2 and (1+ci)/2 percentiles and the one-sided p is (b + 1) / (R + 1), b = values <= 0 (判断 32) (scripts/e2_summarise.py, output interval_method); 3 h 13 min on a Mac CPU for the 10k development cohort (experiments/20261113-e2-dev-dryrun-v4); about 13 hours expected for the 40k confirmatory cohort (判断 34: 4 shards of 10k joined by scripts/merge_cohort_shards.py). 判断 36: scripts/e2_summarise.py --e1 stops unless E1's completeness.complete is true. 判断 35: e2_map.py also writes dV_opt (best rule, act iff p > the sample mean of y) and dAUC (auc_KR - auc_K) per rep, and e2_summarise.py reports their D0 - D2 contrast (lambda 1, K2) as \"secondary_H2\" (no decision). 判断 37: \"H2_residual_leak\" = the lower end of the dV_bal interval at lambda 1, D2, K2 > delta_E2 (secondary test, outside Holm). 判断 38: with bootstrap_persons e2_map.py writes results/e2_lambda1_original.csv (the lambda 1 cells of the primary attribute on the original sample, no resampling) and e2_summarise.py sets it beside the R-rep mean as a description; the final decision carries H1_scope (full only when E1's H0b and E2's H0c are both supported) and H1_K0n_length_note.",
+ "lambdas": [0.0, 0.25, 0.5, 0.75, 1.0],
+ "reps": 200,
+ "bootstrap_persons": true,
+ "alpha_one_sided": 0.025,
+ "min_feature_count": 3,
+ "primary_attribute": "drug_misuse",
+ "delta_E2": 0.005,
+ "ci": 0.95,
+ "ci_equivalence": 0.90
+}

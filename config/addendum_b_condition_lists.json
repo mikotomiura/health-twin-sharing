@@ -1,0 +1,254 @@
+{
+ "first_year": 2023,
+ "age_range_at_first_year": [
+  25,
+  70
+ ],
+ "d2": {
+  "min_n_condition": 30,
+  "min_n_joint": 10,
+  "min_lift": 2.0
+ },
+ "attributes": {
+  "drug_misuse": {
+   "A_pattern": "drug abuse|opioid|overdose|misuses drugs",
+   "D0": {
+    "include": [
+     "drug abuse",
+     "opioid",
+     "overdose",
+     "misuses drugs"
+    ],
+    "exclude": []
+   },
+   "D1": [
+    {
+     "display": "Major depressive disorder (disorder)",
+     "group": "a mental health condition",
+     "condition": "depression",
+     "refs": [
+      48,
+      50
+     ]
+    },
+    {
+     "display": "Major depression, single episode (disorder)",
+     "group": "a mental health condition",
+     "condition": "depression",
+     "refs": [
+      48,
+      50
+     ]
+    },
+    {
+     "display": "Severe anxiety (panic) (finding)",
+     "group": "a mental health condition",
+     "condition": "anxiety",
+     "refs": [
+      48
+     ]
+    },
+    {
+     "display": "Posttraumatic stress disorder (disorder)",
+     "group": "a mental health condition",
+     "condition": "PTSD",
+     "refs": [
+      48
+     ]
+    },
+    {
+     "display": "Child attention deficit disorder (disorder)",
+     "group": "a mental health condition",
+     "condition": "ADHD",
+     "refs": [
+      48
+     ]
+    },
+    {
+     "display": "Chronic pain (finding)",
+     "group": "a pain-related condition",
+     "condition": "chronic pain",
+     "refs": [
+      47,
+      49
+     ]
+    },
+    {
+     "display": "Chronic low back pain (finding)",
+     "group": "a pain-related condition",
+     "condition": "chronic low back pain",
+     "refs": [
+      47,
+      49
+     ]
+    },
+    {
+     "display": "Chronic neck pain (finding)",
+     "group": "a pain-related condition",
+     "condition": "chronic neck pain",
+     "refs": [
+      47,
+      49
+     ]
+    },
+    {
+     "display": "Unhealthy alcohol drinking behavior (finding)",
+     "group": "an alcohol-related condition",
+     "condition": "unhealthy alcohol use",
+     "refs": [
+      51
+     ]
+    },
+    {
+     "display": "Alcoholism (disorder)",
+     "group": "an alcohol-related condition",
+     "condition": "alcohol dependence",
+     "refs": [
+      51
+     ]
+    }
+   ]
+  },
+  "diabetes_t2": {
+   "A_pattern": "diabetes mellitus type 2",
+   "D0": {
+    "include": [
+     "diabet"
+    ],
+    "exclude": [
+     "^prediabetes"
+    ]
+   },
+   "D1": null,
+   "_note": "Exploratory, E2 only (判断 4). No D1: the literature list was built for drug misuse only."
+  },
+  "severe_anxiety": {
+   "A_pattern": "severe anxiety",
+   "D0": {
+    "include": [
+     "anxiety",
+     "panic"
+    ],
+    "exclude": []
+   },
+   "D1": [],
+   "_note": "addendum B (2026-11-17). Synthea v4.0.0 encounter/anxiety_screening.json. No D1."
+  }
+ },
+ "D2_frozen": {
+  "drug_misuse": {
+   "displays": [
+    "Chronic intractable migraine without aura (disorder)",
+    "Homeless (finding)",
+    "Impacted molars (disorder)"
+   ],
+   "lift": {
+    "Chronic intractable migraine without aura (disorder)": 5.106,
+    "Impacted molars (disorder)": 5.052,
+    "Homeless (finding)": 2.096
+   }
+  },
+  "diabetes_t2": {
+   "displays": [
+    "Abnormal findings diagnostic imaging heart+coronary circulat (finding)",
+    "Acute ST segment elevation myocardial infarction (disorder)",
+    "Acute non-ST segment elevation myocardial infarction (disorder)",
+    "Awaiting transplantation of kidney (situation)",
+    "Chronic kidney disease stage 1 (disorder)",
+    "Chronic kidney disease stage 2 (disorder)",
+    "Chronic kidney disease stage 3 (disorder)",
+    "Chronic kidney disease stage 4 (disorder)",
+    "Disturbances in tooth eruption",
+    "Essential hypertension (disorder)",
+    "History of coronary artery bypass grafting (situation)",
+    "History of myocardial infarction (situation)",
+    "History of renal transplant (situation)",
+    "Hyperglycemia (disorder)",
+    "Hyperlipidemia (disorder)",
+    "Hypertriglyceridemia (disorder)",
+    "Hypoxemia (disorder)",
+    "Ischemic heart disease (disorder)",
+    "Metabolic syndrome X (disorder)",
+    "Myocardial infarction (disorder)",
+    "Periapical abscess without sinus",
+    "Pneumonia (disorder)",
+    "Polyp of colon (disorder)",
+    "Recurrent rectal polyp (disorder)",
+    "Respiratory distress (finding)",
+    "Sore throat (finding)"
+   ],
+   "lift": {
+    "Hyperglycemia (disorder)": 14.194,
+    "Hypertriglyceridemia (disorder)": 14.007,
+    "Metabolic syndrome X (disorder)": 7.274,
+    "Awaiting transplantation of kidney (situation)": 4.129,
+    "Chronic kidney disease stage 4 (disorder)": 4.055,
+    "Recurrent rectal polyp (disorder)": 3.802,
+    "Chronic kidney disease stage 3 (disorder)": 3.73,
+    "Chronic kidney disease stage 1 (disorder)": 3.465,
+    "Chronic kidney disease stage 2 (disorder)": 3.409,
+    "Myocardial infarction (disorder)": 3.38,
+    "History of renal transplant (situation)": 3.253,
+    "Acute non-ST segment elevation myocardial infarction (disorder)": 3.003,
+    "History of coronary artery bypass grafting (situation)": 2.883,
+    "History of myocardial infarction (situation)": 2.865,
+    "Acute ST segment elevation myocardial infarction (disorder)": 2.839,
+    "Abnormal findings diagnostic imaging heart+coronary circulat (finding)": 2.788,
+    "Ischemic heart disease (disorder)": 2.787,
+    "Polyp of colon (disorder)": 2.483,
+    "Essential hypertension (disorder)": 2.48,
+    "Hypoxemia (disorder)": 2.294,
+    "Respiratory distress (finding)": 2.294,
+    "Periapical abscess without sinus": 2.263,
+    "Hyperlipidemia (disorder)": 2.169,
+    "Disturbances in tooth eruption": 2.11,
+    "Pneumonia (disorder)": 2.065,
+    "Sore throat (finding)": 2.028
+   }
+  },
+  "severe_anxiety": {
+   "displays": [
+    "Awaiting transplantation of kidney (situation)",
+    "Chronic kidney disease stage 1 (disorder)",
+    "Chronic kidney disease stage 2 (disorder)",
+    "Chronic kidney disease stage 3 (disorder)",
+    "Chronic kidney disease stage 4 (disorder)",
+    "Disorder of kidney due to diabetes mellitus (disorder)",
+    "History of renal transplant (situation)",
+    "Microalbuminuria due to type 2 diabetes mellitus (disorder)",
+    "Neuropathy due to type 2 diabetes mellitus (disorder)",
+    "Osteoporosis (disorder)",
+    "Proteinuria due to type 2 diabetes mellitus (disorder)"
+   ],
+   "lift": {
+    "Chronic kidney disease stage 3 (disorder)": 3.847,
+    "Proteinuria due to type 2 diabetes mellitus (disorder)": 3.583,
+    "Chronic kidney disease stage 4 (disorder)": 3.007,
+    "Chronic kidney disease stage 2 (disorder)": 2.933,
+    "Microalbuminuria due to type 2 diabetes mellitus (disorder)": 2.887,
+    "Awaiting transplantation of kidney (situation)": 2.807,
+    "History of renal transplant (situation)": 2.764,
+    "Disorder of kidney due to diabetes mellitus (disorder)": 2.737,
+    "Chronic kidney disease stage 1 (disorder)": 2.689,
+    "Neuropathy due to type 2 diabetes mellitus (disorder)": 2.508,
+    "Osteoporosis (disorder)": 2.048
+   }
+  },
+  "_source": {
+   "cohort": "development (Synthea 10k, seed 42), lambda = 1",
+   "persons.parquet": "42c10d571e3f71cd95cdb383212af63efa65736aed7648d9f33ce1cf709b2772",
+   "conditions.parquet": "66447f64c8a6b3ca997af10dadfd7215abb3315d4de211f24cc9545f468a529d",
+   "rule": {
+    "min_n_condition": 30,
+    "min_n_joint": 10,
+    "min_lift": 2.0
+   },
+   "script": "scripts/addendum_b_lists.py (freeze_d2.compute)",
+   "copied_from_v4": [
+    "drug_misuse",
+    "diabetes_t2"
+   ]
+  }
+ },
+ "_note": "Addendum B condition lists (not the v4 file). drug_misuse and diabetes_t2 copied from v4 config/condition_lists.json at b35f5f7; severe_anxiety added with D2 from the development cohort."
+}

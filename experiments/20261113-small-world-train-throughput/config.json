@@ -1,0 +1,43 @@
+{
+  "purpose": "planning only (budget and model size); not evidence for any hypothesis",
+  "cohort": "TwinLLM 10k development cohort (Synthea v4.0.0, seed 42), ~/data/health-twin-sharing/derived/cohort-10k",
+  "condition_lists": "config/condition_lists.json",
+  "attribute": "drug_misuse",
+  "check_frac": 0.2,
+  "n_aug": 8,
+  "K": [
+    "K2"
+  ],
+  "probe_correlates": [
+    "Chronic pain (finding)",
+    "Chronic intractable migraine without aura (disorder)",
+    "Impacted molars (disorder)"
+  ],
+  "sizes": {
+    "s20m": {
+      "n_layer": 6,
+      "d_model": 512,
+      "n_head": 8
+    },
+    "s50m": {
+      "n_layer": 8,
+      "d_model": 768,
+      "n_head": 12
+    },
+    "s100m": {
+      "n_layer": 12,
+      "d_model": 896,
+      "n_head": 14
+    }
+  },
+  "vocab_size": 4096,
+  "seq_len": 1024,
+  "batch_tokens": 65536,
+  "lr": 0.0006,
+  "warmup_steps": 200,
+  "train_tokens": 200000000,
+  "eval_every_tokens": 10000000,
+  "releases_for_reading_check": "experiments/20261113-e1-colab-dryrun/results/twin.jsonl",
+  "n_reading_mid": 24,
+  "seq_len_note": "1024 covers the twin releases (300-694 tokens with the 4096 BPE; code review 2026-11-13)"
+}

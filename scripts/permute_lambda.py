@@ -11,10 +11,21 @@ and e2_map.py.
 """
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
+
+# Seeds used on development, test and dry-run data; a confirmatory run (HTS_PREREG_FROZEN=yes) must not use them.
+DEV_SEEDS = frozenset({42, 43, 44, 9001, 9002, 20261113})
+
+
+def check_confirm_seed(seed: int) -> None:
+    """Stop when HTS_PREREG_FROZEN=yes (a confirmatory run) and the SEED is a development / test seed."""
+    if os.environ.get("HTS_PREREG_FROZEN") == "yes" and int(seed) in DEV_SEEDS:
+        raise SystemExit(f"SEED {seed} is a development or test seed; a confirmatory run (HTS_PREREG_FROZEN=yes) needs the frozen one")
 
 
 def rx(patterns: list[str]) -> str:
@@ -48,8 +59,8 @@ def load_tables(derived: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
 
 def population(p: pd.DataFrame, c: pd.DataFrame, a_pattern: str, first_year: int,
                age_range: list[int]) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Persons alive at the end, age in range at first_year, A = A-pattern onset before first_year, not-A = never.
-    Same rule as build_records.py. Returns (persons with column A, their condition rows)."""
+    """Persons alive at the reference date 2026-10-25 (Synthea deceasedDateTime absent), age in range at first_year, A = A-pattern onset before first_year, not-A = never.
+    Same population rule as build_records.py (dev). Returns (persons with column A, their condition rows)."""
     p = p[p["deceased"].isna()]
     p = p[(first_year - p["birth_year"]).between(*age_range)]
     is_a = c["display"].str.contains(a_pattern, case=False, regex=True, na=False)

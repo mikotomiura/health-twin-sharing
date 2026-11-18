@@ -1,4 +1,6 @@
-"""Extra LLM dry runs on the 864 releases of experiments/20261111-llm-dry-run (run on Colab with Ollama; the logic is
+"""Note (confirmatory use): what the confirmatory path (scripts/e1_run.py, e1_build.py, e1_summarise.py) uses from this module is only ATTACK_SYSTEMS, UTIL_ITEMS, UTIL_SCHEMA, UTIL_SYSTEM, load_jsonl, run_jobs, timing. Every other function is for the exploratory dry runs and follows other rules than the v4 rules (action iff p > 0.5, balanced V): V = max(p, 1 - p), p >= tau, etc.
+
+Extra LLM dry runs on the 864 releases of experiments/20261111-llm-dry-run (run on Colab with Ollama; the logic is
 testable locally with --backend fake). Dry-run preview only; not for confirmatory analysis.
 
 Stages (each appends to <exp>/results/<stage>.jsonl and skips keys already written, so a re-run resumes):

@@ -1,0 +1,16 @@
+{
+ "_note": "addendum B dev dry run: small R",
+ "lambdas": [
+  0.0,
+  0.5,
+  1.0
+ ],
+ "reps": 5,
+ "bootstrap_persons": true,
+ "alpha_one_sided": 0.025,
+ "min_feature_count": 3,
+ "primary_attribute": "drug_misuse",
+ "delta_E2": 0.005,
+ "ci": 0.95,
+ "ci_equivalence": 0.9
+}

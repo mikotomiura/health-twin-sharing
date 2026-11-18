@@ -4,10 +4,12 @@ Code for measuring how much a personal health twin's answers leak a withheld hea
 when an audit removes the condition's name and, at higher audit levels, coarsens conditions correlated with it.
 All data are synthetic (Synthea cohorts from TwinLLM) or public; no data are collected from people.
 
-This repository is a public snapshot of a research project in progress. It contains the code, the configuration,
-the tests and, for each experiment, the recipe to re-run it (`experiments/*/run.sh`, `config.json`, `SEED`).
-Results, notes, the preregistration draft and the manuscript are not included yet; they will be released with the
-preregistration and the paper. Comments in the code that point to `docs/` or `.steering/` refer to these
+This repository is a public snapshot of the research code. It contains the code, the configuration, the tests and,
+for each experiment, the recipe to re-run it (`experiments/*/run.sh`, `config.json`, `SEED`). The preregistration and
+its addendum are on OSF (doi:10.17605/OSF.IO/S5M9T). The version used in the paper is archived at Zenodo together with
+the data behind every reported number: the synthetic study cohort, the inputs and outputs of the LLM measurement, the
+classifier measurement's value for every bootstrap repetition and the summaries (see `DEPOSIT.md` in the archive and
+the paper's Data Availability statement). Comments in the code that point to `docs/` or `.steering/` refer to
 unpublished project notes.
 
 ## Layout
@@ -16,6 +18,8 @@ unpublished project notes.
 - `config/` — condition lists (auditor knowledge D0–D2) and confirmatory settings
 - `experiments/<date>-<name>/` — re-run recipes; `run.sh` writes the results next to it
 - `tests/` — `uv run --with pytest python -m pytest`
+- `scripts/make_tables.py`, `scripts/make_figures.py`, `scripts/paper_*.py` — the paper's tables, figures and the
+  supplementary counts, computed from the archived outputs
 
 ## Re-running
 Needs [uv](https://docs.astral.sh/uv/). Data are downloaded to `$HTS_DATA_DIR` (default `~/data/health-twin-sharing`).

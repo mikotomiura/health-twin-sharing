@@ -1,0 +1,21 @@
+{
+  "_note": "Addendum B candidates (development cohort cohort-10k only; .steering/_handoff/20261117-1300-addendum-a-b-parallel.md session B). Read by scripts/attr2_candidates.py. Population and A/non-A as the main attribute: alive, age 25-70 in first_year, A = onset before first_year, non-A = never. Dev-only; not for the confirmatory cohort.",
+  "first_year": 2023,
+  "age_range_at_first_year": [25, 70],
+  "main_attribute": "drug abuse|opioid|overdose|misuses drugs",
+  "candidates": {
+    "drug_misuse_main": "drug abuse|opioid|overdose|misuses drugs",
+    "diabetes_t2": "diabetes mellitus type 2",
+    "alcohol": "unhealthy alcohol drinking|alcoholism",
+    "severe_anxiety": "severe anxiety",
+    "ipv_victim": "intimate partner abuse",
+    "criminal_record": "criminal record",
+    "miscarriage": "miscarriage",
+    "breast_cancer": "malignant neoplasm of breast",
+    "lung_cancer": "lung cancer|carcinoma of lung|neoplasm of lung",
+    "prostate_cancer": "prostate"
+  },
+  "min_n_correlate": 30,
+  "min_n_joint": 10,
+  "top_correlates": 8
+}

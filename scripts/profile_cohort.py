@@ -1,4 +1,4 @@
-"""Flatten Synthea FHIR bundles into small tables for the dry run (persons / conditions / encounters).
+"""Flatten Synthea FHIR bundles into small tables for the dry run and the confirmatory cohort (persons / conditions / encounters).
 
 Reads either a directory of bundle JSON files or a .tar.zst archive (streamed; nothing is unpacked to disk).
 
@@ -6,7 +6,9 @@ Usage:
   python scripts/profile_cohort.py <bundle-dir | archive.tar.zst> <out-dir>
 
 Writes <out-dir>/persons.parquet, conditions.parquet, encounters.parquet.
-Only coded fields and dates are kept (no names, addresses or free text); the data is synthetic.
+Used for the development cohort and for the confirmatory cohort (scripts/generate_confirm_cohort.sh). Only coded fields and dates are kept
+(no names, addresses or free text from the bundle content); the data is synthetic. The `file` column holds the Synthea bundle file name,
+which contains the synthetic person's generated name.
 """
 from __future__ import annotations
 

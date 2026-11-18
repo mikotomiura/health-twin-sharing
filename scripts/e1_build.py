@@ -1,12 +1,12 @@
 """Confirmatory E1, step 1 (CPU): records per person x lambda x defender, and the recipient's knowledge K0..K3.
 
-Preregistration: docs/preregistration-draft.md (v1) §3-§4; decisions .steering/20261112-paper-write/decisions.md 判断 3・4・7
+Preregistration: docs/preregistration-draft.md (v4); decisions .steering/20261112-paper-write/decisions.md 判断 3・4・7
 and .steering/20261112-cpu-prep/decisions.md 判断 7・9・10. Design: .steering/20261112-e1-prereg-impl/design.md.
 
   population, A      permute_lambda.population (same rule as build_records.py); n_A A and n_not_A not-A persons drawn with SEED
   lambda             permute_lambda.permute (bundles of the rows that are neither A-type nor D0), per lambda
   onset clamp        in the E1 records only, an onset year before the birth year is set to the birth year (判断 4); counted
-  record at year y   conditions with onset <= y, not abated before y (as build_records.py), visits in y
+  record at year y   conditions with onset <= y, not abated before y (as build_records.py); no visit count (判断 16)
   defender D         D0 drop the D0 displays; D1 D0 + D1 displays -> their group; D2 D0 + the frozen D2 displays
                      (config/condition_lists.json "D2_frozen") -> their D1 group or "a coarsened condition".
                      Same-name entries of one year are merged (earliest onset).
@@ -29,7 +29,7 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).parent))
-from permute_lambda import check_a_within_d0, d0_mask, load_tables, permute, population  # noqa: E402
+from permute_lambda import check_a_within_d0, check_confirm_seed, d0_mask, load_tables, permute, population  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 COARSE = "a coarsened condition"
@@ -70,7 +70,8 @@ def apply_defender(conds: list[dict], d0: dict, mapping: dict) -> tuple[list[dic
 
 
 def clamp_onset(c: pd.DataFrame, birth_year: pd.Series) -> tuple[pd.DataFrame, pd.Series]:
-    """Set onset_year to the birth year where it is earlier (判断 4). birth_year is indexed by pid.
+    """Set onset_year to the birth year where it is earlier (判断 4). Applied at every lambda (at lambda = 1 normally 0 rows).
+    birth_year is indexed by pid.
     Returns (clamped copy, boolean mask of the clamped rows)."""
     c = c.copy()
     by = c.pid.map(birth_year)
@@ -112,7 +113,7 @@ def knowledge(persons: pd.DataFrame, c: pd.DataFrame, years: list[int], d2: list
 
 def sentences(kn: dict, question_noun: str = "a history of drug misuse or dependence") -> dict:
     """The K1 and K2 add-on sentences for one lambda."""
-    k1 = f"From population statistics you know that among adults like this person, {pct(kn['p_A'])} have {question_noun}."
+    k1 = f"From population statistics you know that among adults aged 25 to 70 in this population (not specific to this person's age or sex), {pct(kn['p_A'])} have {question_noun}."
     parts = []
     for d, r in kn["conditions"].items():
         if r["p_A"] is not None:
@@ -129,9 +130,35 @@ def sentences(kn: dict, question_noun: str = "a history of drug misuse or depend
     return {"K1": k1, "K2": k2}
 
 
+# Neutral filler for K0n (判断 20): no digits, no rates, no word of the attribute A, nothing about health.
+NEUTRAL_PARAGRAPH = (
+    "The vacancy was advertised on the company website two weeks ago and applications are collected by the hiring team. "
+    "Interviews take place in a meeting room near the main entrance, and candidates are asked to arrive a little early "
+    "and to bring a form of identification. The team usually replies by email within a few working days. "
+    "Shifts are organised by the supervisor, who publishes the schedule on the notice board and by message each week. "
+    "New staff receive an induction on their first morning, a tour of the building, and the name of a colleague "
+    "who can answer questions during the first month. Parking is available behind the main building, and the canteen "
+    "is open throughout the day. ")
+
+
+def neutral_text(n_words: int) -> str:
+    """Exactly n_words words of NEUTRAL_PARAGRAPH, repeated and cut as needed (deterministic); ends with a full stop."""
+    if n_words <= 0:
+        return ""
+    base = NEUTRAL_PARAGRAPH.split()
+    words = (base * (n_words // len(base) + 1))[:n_words]
+    if not words[-1].endswith("."):
+        words[-1] += "."
+    return " ".join(words)
+
+
 def known_text(level: str, person: dict, kn_lambda: dict, base: str) -> str:
-    """K0 < K1 < K2 < K3, each containing the lower level (preregistration §4.2)."""
+    """K0 < K1 < K2 < K3, each containing the lower level (preregistration §4.2).
+    K0n = K0 + a neutral text with as many words as the K1 and K2 sentences of this lambda together (判断 20)."""
     out = [base.format(**person["known_facts"])]
+    if level == "K0n":
+        n = len(kn_lambda["sentences"]["K1"].split()) + len(kn_lambda["sentences"]["K2"].split())
+        out.append(neutral_text(n))
     if level in ("K1", "K2", "K3"):
         out.append(kn_lambda["sentences"]["K1"])
     if level in ("K2", "K3"):
@@ -142,9 +169,16 @@ def known_text(level: str, person: dict, kn_lambda: dict, base: str) -> str:
     return " ".join(out)
 
 
+def year_record(year: int, person, shown: list[dict], n_removed: int, n_coarsened: int) -> dict:
+    """One year of the record the twin sees. No visit count (判断 16): E1 and E2 releases carry the same fields."""
+    return {"year": year, "age": int(year - person.birth_year), "gender": person.gender,
+            "conditions": shown, "audit_removed": n_removed, "coarsened": n_coarsened}
+
+
 def main(derived: Path, exp: Path) -> None:
     cfg = json.loads((exp / "config.json").read_text(encoding="utf-8"))
     seed = int((exp / "SEED").read_text().strip())
+    check_confirm_seed(seed)
     lists = load_lists()
     at = lists["attributes"][cfg["attribute"]]
     d2 = list(lists["D2_frozen"][cfg["attribute"]]["displays"])
@@ -155,8 +189,6 @@ def main(derived: Path, exp: Path) -> None:
 
     p_all, c_all = load_tables(derived)
     check_a_within_d0(c_all.display, at["A_pattern"], at["D0"])
-    e = pd.read_parquet(derived / "encounters.parquet")
-    e["year"] = pd.to_datetime(e["start"], utc=True, errors="coerce", format="ISO8601").dt.year
     persons, c = population(p_all, c_all, at["A_pattern"], y0, ages)
     rng = np.random.default_rng([seed, zlib.crc32(b"e1-sample")])
     pick = pd.concat([
@@ -168,7 +200,6 @@ def main(derived: Path, exp: Path) -> None:
     fixed = d0_mask(c.display, at["D0"]) | is_a_row
     old = set(c.pid[c.display.str.contains(OLD_TYPE, case=False, regex=True, na=False) & (c.onset_year < y0)])
     birth = persons.set_index("pid").birth_year
-    visits = e[e.pid.isin(pick_ids)].groupby(["pid", "year"]).size()
     pi = float(persons.A.mean())
 
     out = exp / "inputs"
@@ -179,7 +210,7 @@ def main(derived: Path, exp: Path) -> None:
     for lam in cfg["lambdas"]:
         rl = np.random.default_rng([seed, zlib.crc32(b"e1-lambda"), int(round(lam * 1000))])
         cp = permute(c, persons.pid.to_numpy(), fixed, lam, rl)
-        cp, clamped = clamp_onset(cp, birth)
+        cp, clamped = clamp_onset(cp, birth)  # applied at every lambda (at lambda = 1 normally 0 rows)
         rest = persons[~persons.pid.isin(pick_ids)]
         kn = knowledge(rest, cp[cp.pid.isin(set(rest.pid))], years, d2, maps)
         kn["sentences"] = sentences(kn)
@@ -201,9 +232,7 @@ def main(derived: Path, exp: Path) -> None:
                     shown, n_rm, n_co = apply_defender(conds, at["D0"], maps[dname])
                     rep["removed_by_D0"][dname] = rep["removed_by_D0"].get(dname, 0) + n_rm
                     rep["coarsened"][dname] = rep["coarsened"].get(dname, 0) + n_co
-                    recs.append({"year": y, "age": int(y - person.birth_year), "gender": person.gender,
-                                 "visits_this_year": int(visits.get((person.pid, y), 0)),
-                                 "conditions": shown, "audit_removed": n_rm, "coarsened": n_co})
+                    recs.append(year_record(y, person, shown, n_rm, n_co))
                 rows.append({"pid": person.pid, "A": bool(person.A),
                              "a_type": None if not person.A else ("old" if person.pid in old else "misuses_only"),
                              "lambda": lam, "D": dname,

@@ -11,3 +11,19 @@ experiments/*/results/ollama.log
 # fake-backend outputs of the E1 dev dry run (random values, 8 MB; regenerate with run.sh)
 experiments/20261112-e1-dev-dryrun/results/
 experiments/20261112-e1-dev-dryrun/metrics.json
+
+# small-world: corpus and bundle are rebuilt by run.sh pack (SHA-256 in data.md)
+experiments/*/corpus/
+experiments/*/*/corpus/
+experiments/*/bundle.tar.gz
+experiments/*/bundle.tar.gz.tmp
+
+# application documents (drafts, inquiries with personal details): kept on disk only, not tracked (researcher 2026-11-14)
+docs/application/
+
+# Ollama の serve のログ（大きい。ディスクには残す。sha256 は各 dir の judgement.md か、それを足したコミットのメッセージに）
+experiments/*/vm*/serve.log
+
+# manuscript build outputs (scripts/build_docx.py; regenerate) and personal title-page details (researcher 2026-11-14 rule: personal details on disk only)
+papers/jamia/build/
+papers/jamia/private/
