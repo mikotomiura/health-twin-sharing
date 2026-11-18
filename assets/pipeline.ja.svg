@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="250" viewBox="0 0 900 250" role="img" aria-label="研究の設計：記録・監査役・LLM エージェント・受け手">
+  <title>研究の設計</title>
+  <rect x="0" y="0" width="900" height="250" rx="18" fill="#ffffff"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#6b7280"/>
+    </marker>
+  </defs>
+  <g font-family="'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic', Arial, sans-serif" fill="#1f2937">
+    <!-- 1 record -->
+    <rect x="20" y="40" width="180" height="150" rx="14" fill="#eef4fb" stroke="#2a7fd4" stroke-width="2"/>
+    <text x="110" y="70" font-size="17" font-weight="bold" text-anchor="middle">① 健康記録</text>
+    <text x="110" y="100" font-size="13" text-anchor="middle">合成の 1 人</text>
+    <text x="110" y="120" font-size="13" text-anchor="middle">薬物の誤用あり</text>
+    <text x="110" y="140" font-size="13" text-anchor="middle">（守りたい属性）</text>
+    <text x="110" y="160" font-size="13" text-anchor="middle">＋ ほかの病名</text>
+    <!-- 2 auditor -->
+    <rect x="240" y="40" width="190" height="150" rx="14" fill="#f3f4f6" stroke="#6b7280" stroke-width="2"/>
+    <text x="335" y="70" font-size="17" font-weight="bold" text-anchor="middle">② 監査役</text>
+    <circle cx="262" cy="98" r="6" fill="#2a7fd4"/><text x="276" y="103" font-size="13">病名を伏せる</text>
+    <rect x="256" y="117" width="12" height="12" fill="#e8622c"/><text x="276" y="128" font-size="13">＋ 粗くする（文献）</text>
+    <path d="M262 141 L269 154 L255 154 z" fill="#1a9e77"/><text x="276" y="153" font-size="13">＋ 粗くする（データ）</text>
+    <text x="335" y="178" font-size="12" fill="#6b7280" text-anchor="middle">監査役が何を知っているか</text>
+    <!-- 3 agent -->
+    <rect x="470" y="40" width="180" height="150" rx="14" fill="#f5f0ff" stroke="#7c4dcc" stroke-width="2"/>
+    <text x="560" y="70" font-size="17" font-weight="bold" text-anchor="middle">③ LLM エージェント</text>
+    <text x="560" y="100" font-size="13" text-anchor="middle">雇用主の毎年の</text>
+    <text x="560" y="120" font-size="13" text-anchor="middle">質問に答える</text>
+    <text x="560" y="140" font-size="13" text-anchor="middle">（監査後の記録から）</text>
+    <!-- 4 recipient -->
+    <rect x="690" y="40" width="190" height="150" rx="14" fill="#fff3ec" stroke="#e8622c" stroke-width="2"/>
+    <text x="785" y="70" font-size="17" font-weight="bold" text-anchor="middle">④ 受け手</text>
+    <text x="785" y="100" font-size="13" text-anchor="middle">年齢・性別だけ／</text>
+    <text x="785" y="120" font-size="13" text-anchor="middle">全体の率／</text>
+    <text x="785" y="140" font-size="13" text-anchor="middle">病名ごとの率を知る</text>
+    <text x="785" y="170" font-size="13" font-weight="bold" fill="#c0392b" text-anchor="middle">→ 薬物の誤用を当てるか</text>
+    <!-- arrows -->
+    <line x1="200" y1="115" x2="236" y2="115" stroke="#6b7280" stroke-width="2.5" marker-end="url(#a)"/>
+    <line x1="430" y1="115" x2="466" y2="115" stroke="#6b7280" stroke-width="2.5" marker-end="url(#a)"/>
+    <line x1="650" y1="115" x2="686" y2="115" stroke="#6b7280" stroke-width="2.5" marker-end="url(#a)"/>
+    <text x="450" y="225" font-size="13" fill="#4b5563" text-anchor="middle">漏れ ＝ 読んだ後に受け手が当てる力の上がり幅（バランス正解率）。LLM の攻撃者（回答）と分類器（監査後の記録）で測る</text>
+  </g>
+</svg>

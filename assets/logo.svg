@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="140" viewBox="0 0 560 140" role="img" aria-label="health-twin-sharing logo">
+  <title>health-twin-sharing</title>
+  <rect x="0" y="0" width="560" height="140" rx="22" fill="#ffffff"/>
+  <!-- record card -->
+  <rect x="22" y="22" width="78" height="96" rx="10" fill="#eef4fb" stroke="#2a7fd4" stroke-width="3"/>
+  <rect x="34" y="38" width="54" height="7" rx="3.5" fill="#2a7fd4"/>
+  <rect x="34" y="54" width="40" height="7" rx="3.5" fill="#9cc3ea"/>
+  <!-- masked label -->
+  <rect x="34" y="70" width="54" height="12" rx="3" fill="#1f2937"/>
+  <text x="61" y="79.5" font-family="Arial, Helvetica, sans-serif" font-size="8" fill="#ffffff" text-anchor="middle">MASKED</text>
+  <rect x="34" y="92" width="46" height="7" rx="3.5" fill="#9cc3ea"/>
+  <!-- leak arrow -->
+  <path d="M104 70 C 124 70, 124 52, 142 52" fill="none" stroke="#e8622c" stroke-width="4" stroke-linecap="round" stroke-dasharray="2 8"/>
+  <!-- magnifier -->
+  <circle cx="160" cy="48" r="17" fill="#fff3ec" stroke="#e8622c" stroke-width="4"/>
+  <line x1="172" y1="60" x2="186" y2="74" stroke="#e8622c" stroke-width="6" stroke-linecap="round"/>
+  <text x="160" y="54" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="bold" fill="#e8622c" text-anchor="middle">?</text>
+  <!-- wordmark -->
+  <text x="214" y="68" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="bold" fill="#1f2937">health-twin-sharing</text>
+  <text x="216" y="98" font-family="Arial, Helvetica, sans-serif" font-size="15" fill="#4b5563">Does masking a label stop the inference?</text>
+</svg>
