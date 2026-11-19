@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <a href="https://doi.org/10.5281/zenodo.24344576"><img alt="Preprint" src="https://img.shields.io/badge/preprint-10.5281%2Fzenodo.24344576-4c7cf3"></a>
+  <a href="https://doi.org/10.5281/zenodo.24344575"><img alt="Preprint" src="https://img.shields.io/badge/preprint-10.5281%2Fzenodo.24344575-4c7cf3"></a>
   <a href="https://doi.org/10.5281/zenodo.24338451"><img alt="Code and data" src="https://img.shields.io/badge/code%20%2B%20data-10.5281%2Fzenodo.24338451-1a9e77"></a>
   <a href="https://doi.org/10.17605/OSF.IO/S5M9T"><img alt="Preregistration" src="https://img.shields.io/badge/preregistered-OSF%20S5M9T-e8622c"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-Apache--2.0-6b7280"></a>
@@ -22,7 +22,7 @@
 次の論文の、コード・設定・テスト・実験をやり直す手順です。
 
 **Label-masking audits of health-record large language model agents pass answers that raise suspicion of drug misuse among recipients who know condition rates: a preregistered synthetic-cohort study**<br>
-Mikoto Miura・Yuusuke Harada／プレプリント、*JAMIA* に投稿中（査読前）
+Mikoto Miura・Yuusuke Harada／プレプリント（査読前）
 
 データはすべて **合成**（Synthea のコホート）か公開のものです。人から集めたデータはありません。
 
@@ -91,7 +91,7 @@ LLM の実験は GPU のあるマシンで [Ollama](https://ollama.com) を使�
   year      = {2026},
   publisher = {Zenodo},
   note      = {Preprint, not peer reviewed},
-  doi       = {10.5281/zenodo.24344576}
+  doi       = {10.5281/zenodo.24344575}
 }
 ```
 

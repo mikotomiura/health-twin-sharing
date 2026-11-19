@@ -212,8 +212,9 @@ def reference_docx(path: Path):
               f"<w:rPr>{tnr}<w:b /><w:bCs />{sz}</w:rPr>")
     set_style("BodyText", '<w:pPr><w:spacing w:before="0" w:after="0" w:line="480" w:lineRule="auto" /><w:ind w:firstLine="480" /></w:pPr>')
     set_style("FirstParagraph", '<w:pPr><w:ind w:firstLine="0" /></w:pPr>')
-    # table cells: single spacing so that a table stays within two typeset pages (JAMIA "Tables")
-    set_style("Compact", '<w:pPr><w:spacing w:before="20" w:after="20" w:line="240" w:lineRule="auto" /><w:ind w:firstLine="0" /></w:pPr>',
+    # table cells: double-spaced too (2026-11-19, JAMIA editorial office: "ensure that your manuscript is formatted in
+    # double-space"; the earlier single spacing of table cells was the likely cause of the unsubmission)
+    set_style("Compact", '<w:pPr><w:spacing w:before="0" w:after="0" w:line="480" w:lineRule="auto" /><w:ind w:firstLine="0" /></w:pPr>',
               f'<w:rPr><w:sz w:val="20" /><w:szCs w:val="20" /></w:rPr>')
     with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as zout:
         for item in zin.infolist():
